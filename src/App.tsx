@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Header from './components/header';
 import Home from './pages/home';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Login from './pages/login';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/privateRoute';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 export default function App() {
   const username = "Zluri";
@@ -12,17 +16,29 @@ export default function App() {
   };
 
   return (
-    <Router>
-      <div className="bg-cream min-h-screen">
-        <Header username={username} onRefresh={handleRefresh} />
-
-        <main className="container mx-auto p-6">
-          <Routes>
-            <Route path="/" element={<Home key={refreshKey} />} />
-            {/* Add other routes here */}
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID || ''}>
+      <Router>
+        <AuthProvider>
+          <div className="bg-cream min-h-screen">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <>
+                      <Header username={username} onRefresh={handleRefresh} />
+                      <main className="container mx-auto p-6">
+                        <Home key={refreshKey} />
+                      </main>
+                    </>
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </div>
+        </AuthProvider>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
