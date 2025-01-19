@@ -27,7 +27,7 @@ export default function Home() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api?page=${page}&limit=${limit}`);
+      const response = await fetch(`${process.env.BASE_URL}?page=${page}&limit=${limit}`);
       const result = await response.json();
       toast.success('Data fetched successfully');
       setData(result.transactions);
@@ -51,7 +51,7 @@ export default function Home() {
 
   const handleDelete = async (id: number) => {
     try {
-      await fetch(`http://localhost:3000/api/soft-delete/${id}`, { method: 'PUT' });
+      await fetch(`${process.env.BASE_URL}/soft-delete/${id}`, { method: 'PUT' });
       toast.success('Record deleted successfully');
       fetchData(); // Refresh data after deletion
     } catch (error) {
@@ -78,7 +78,7 @@ export default function Home() {
     };
 
     try {
-      const response = await fetch(`http://localhost:3000/api/update-transaction/${editingRecord.id}`, {
+      const response = await fetch(`${process.env.BASE_URL}/update-transaction/${editingRecord.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),

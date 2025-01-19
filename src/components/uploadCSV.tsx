@@ -26,7 +26,7 @@ export default function UploadCSVForm({ onClose }: UploadCSVFormProps) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:3000/api/uplaodCSV', {
+      const response = await fetch(`${process.env.BASE_URL}/uplaodCSV`, {
         method: 'POST',
         body: formData,
       });

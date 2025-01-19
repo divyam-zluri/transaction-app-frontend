@@ -36,7 +36,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
       date: new Date(formData.date).toISOString().split('T')[0], // Format date as yyyy-mm-dd
     };
     try {
-      const response = await fetch('http://localhost:3000/api/add-transaction', {
+      const response = await fetch(`${process.env.BASE_URL}/add-transaction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
