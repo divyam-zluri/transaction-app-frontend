@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { currencies } from '../utils/currencies'; // Import currencies list
+import EntriesDropdown from '../components/entriesDropdown'; // Import the EntriesDropdown component
 
 interface Record {
   id: number;
@@ -44,8 +45,8 @@ export default function Home() {
     }
   };
 
-  const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLimit(parseInt(e.target.value, 10));
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
     setPage(1); // Reset to first page when limit changes
   };
 
@@ -99,60 +100,74 @@ export default function Home() {
     }
   };
 
+  const handleEditCancel = () => {
+    setEditingRecord(null); // Exit edit mode without saving
+  };
+
+  const downloadCSV = async () => {
+    try {
+      const response = await fetch(`${process.env.BASE_URL}/download`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'transactions.csv';
+      a.click();
+    } catch (error) {
+      toast.error('Error downloading CSV');
+      console.error('Error downloading CSV:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 bg-cream">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-bold mb-8 text-center text-darkText font-playwrite-in">Transaction Records</h1>
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-pink">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-tealLight">
             <div className="flex items-center">
-              <label htmlFor="limit" className="mr-2 text-sm font-medium text-darkText">Records per page:</label>
-              <select
-                id="limit"
-                value={limit}
-                onChange={handleLimitChange}
-                className="border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-teal"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={25}>25</option>
-                <option value={30}>30</option>
-                <option value={50}>50</option>
-              </select>
+              <EntriesDropdown limit={limit} handleLimitChange={handleLimitChange} />
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 ml-auto">
               <button
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-                className={`p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white disabled:opacity-50 ${page === 1 ? 'opacity-50' : ''}`}
+                className="rounded-2xl border-2 border-dashed border-black bg-tealLight hover:bg-teal px-6 py-3 font-semibold uppercase text-black transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none mr-4"
+                onClick={downloadCSV}
               >
-                <ChevronLeft className="w-5 h-5" />
+                Export CSV
               </button>
-              <span className="text-sm font-medium text-darkText">
-                Page {page} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-                className={`p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white disabled:opacity-50 ${page === totalPages ? 'opacity-50' : ''}`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className={`p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white disabled:opacity-50 ${page === 1 ? 'opacity-50' : ''}`}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-sm font-medium text-darkText">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                  className={`p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white disabled:opacity-50 ${page === totalPages ? 'opacity-50' : ''}`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto p-4">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-pink">
+              <thead className="bg-tealLight">
                 <tr>
                   {['Description', 'Date', 'Amount', 'Currency', 'Amount in INR', 'Actions'].map((header) => (
-                    <th key={header} className="px-6 py-3 text-left text-xs font-medium text-darkText uppercase tracking-wider">{header}</th>
+                    <th key={header} className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">{header}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map(record => (
-                  <tr key={record.id} className="hover:bg-pink transition duration-150 ease-in-out">
+                  <tr key={record.id} className="hover:bg-lightPink transition duration-150 ease-in-out group">
                     {editingRecord?.id === record.id ? (
                       <>
                         {/* Editable Row */}
@@ -198,21 +213,22 @@ export default function Home() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">
                           {editingRecord.amountInINR.toFixed(2)}
                         </td>
-                        {/* Save Button */}
-                        <td colSpan={2}>
-                          <button onClick={handleEditSave} className="bg-teal px-4 py-2 rounded-md text-white hover:bg-tealDark">Save</button>
+                        {/* Save and Cancel Buttons */}
+                        <td colSpan={2} className="flex space-x-2 my-2">
+                          <button onClick={handleEditSave} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Save</button>
+                          <button onClick={handleEditCancel} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Cancel</button>
                         </td>
                       </>
                     ) : (
                       <>
                         {/* Non-editable Row */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.description}</td>
+                        <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
                         {/* Action Buttons */}
-                        <td className="px-6 py-4 whitespace-nowrap flex space-x-2">
+                        <td className="px-6 py-4 whitespace-nowrap flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                           {/* Edit Button */}
                           <button onClick={() => handleEditStart(record)} className="text-blue-500 hover:text-blue-700">
                             <Edit2 />

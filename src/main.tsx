@@ -5,8 +5,8 @@ import App from './App.tsx'
 import toast, { Toaster } from 'react-hot-toast';
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+  <>
     <Toaster/>
     <App />
-  </StrictMode>,
+  </>,
 )

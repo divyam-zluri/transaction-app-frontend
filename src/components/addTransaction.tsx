@@ -62,38 +62,38 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg">
-      <h2 className="text-lg font-bold mb-4">Add New Transaction</h2>
+    <form onSubmit={handleSubmit} className="bg-cream p-6 rounded-2xl shadow-lg">
+      <h2 className="text-2xl font-bold mb-4 text-center text-darkText">Add New Transaction</h2>
       <div className="mb-4">
-        <label className="block text-gray-700" htmlFor="description">Description</label>
+        <label className="block text-darkText mb-2" htmlFor="description">Description</label>
         <input
           type="text"
           name="description"
           value={formData.description}
           onChange={handleChange}
           required
-          className="border rounded w-full py-2 px-3"
+          className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700" htmlFor="originalAmount">Amount</label>
+        <label className="block text-darkText mb-2" htmlFor="originalAmount">Amount</label>
         <input
           type="number"
           name="originalAmount"
           value={formData.originalAmount}
           onChange={handleChange}
           required
-          className="border rounded w-full py-2 px-3"
+          className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         />
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700" htmlFor="currency">Currency</label>
+        <label className="block text-darkText mb-2" htmlFor="currency">Currency</label>
         <select
           name="currency"
           value={formData.currency}
           onChange={handleChange}
           required
-          className="border rounded w-full py-2 px-3"
+          className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         >
           {currencies.map(([code]) => (
             <option key={code} value={code}>{code}</option>
@@ -101,27 +101,27 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
         </select>
       </div>
       <div className="mb-4">
-        <label className="block text-gray-700" htmlFor="date">Date</label>
+        <label className="block text-darkText mb-2" htmlFor="date">Date</label>
         <input
           type="date"
           name="date"
           value={formData.date}
           onChange={handleChange}
           required
-          className="border rounded w-full py-2 px-3"
+          className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         />
       </div>
       <div className="flex justify-end">
         <button
           type="button"
           onClick={onClose}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg mr-2"
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg mr-2 hover:bg-gray-400 transition duration-300"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="px-4 py-2 bg-teal text-darkText rounded-lg"
+          className="px-4 py-2 bg-teal text-darkText rounded-lg hover:bg-tealDark hover:text-white transition duration-300"
         >
           Add
         </button>

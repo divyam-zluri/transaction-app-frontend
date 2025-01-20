@@ -8,10 +8,12 @@ export default {
     extend: {
       colors: {
         pink: '#FFCCE1',
-        teal: '#B2E4E5',
+        tealLight: '#B2E4E5',
         cream: '#FFF5D7',
         darkText: '#333333',
-        tealDark: '#037c6e'
+        tealDark: '#037c6e',
+        lightPink: '#FDDDE6',
+        teal: '#0ABAB5'
       },
       fontFamily: {
         'playwrite-in': ['"Playwrite IN"', 'serif'],
