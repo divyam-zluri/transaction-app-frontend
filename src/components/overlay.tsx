@@ -1,4 +1,3 @@
-import React from 'react';
 import { ReactNode, MouseEventHandler } from 'react';
 
 interface OverlayProps {
