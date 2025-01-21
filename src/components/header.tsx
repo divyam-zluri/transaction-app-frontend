@@ -42,7 +42,7 @@ export default function Header({ onRefresh }: HeaderProps) {
   const toggleMenu = () => setMenuOpen(!isMenuOpen);
 
   return (
-    <header className={`bg-tealDark text-darkText p-4 shadow-md ${isMenuOpen ? 'h-auto' : 'h-20'} overflow-hidden`}>
+    <header className={`sticky top-0 z-10 bg-tealDark text-darkText p-4 shadow-md ${isMenuOpen ? 'h-auto' : 'h-20'} overflow-hidden`}>
       <div className="container mx-auto flex justify-between items-center h-full">
         {/* Logo Section */}
         <div className="flex items-center space-x-4">
