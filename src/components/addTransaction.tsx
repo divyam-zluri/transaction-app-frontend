@@ -43,6 +43,8 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
         },
         body: JSON.stringify(formattedData),
       });
+
+      const result  = await response.json();
       if (response.ok) {
         toast.success('Transaction added successfully!');
         setFormData({
@@ -53,7 +55,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
         });
         onClose(); // Close the modal on success
       } else {
-        toast.error(`${response.statusText}`);
+        toast.error(`${result.message}`);
       }
     } catch (error) {
       toast.error('Error adding transaction. Please try again later.');
