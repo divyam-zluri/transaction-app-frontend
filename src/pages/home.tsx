@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { currencies } from '../utils/currencies'; // Import currencies list
@@ -20,6 +20,9 @@ export default function Home() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [editingRecord, setEditingRecord] = useState<Record | null>(null); // Track record being edited
+  const [selectedRecords, setSelectedRecords] = useState<number[]>([]); // Track selected records
+  const [searchCriteria, setSearchCriteria] = useState('description');
+  const [searchValue, setSearchValue] = useState('');
   const location = useLocation();
 
   useEffect(() => {
@@ -61,6 +64,28 @@ export default function Home() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      const response = await fetch(`${process.env.BASE_URL}/delete-selected`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedRecords }),
+      });
+
+      if (response.ok) {
+        toast.success('Selected records deleted successfully');
+        setSelectedRecords([]);
+        fetchData(); // Refresh data after deletion
+      } else {
+        const errorDetails = await response.json();
+        toast.error(`Error deleting selected records: ${errorDetails.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      toast.error('Error deleting selected records');
+      console.error('Error deleting selected records:', error);
+    }
+  };
+
   const handleEditStart = (record: Record) => {
     setEditingRecord(record); // Set the record to be edited
   };
@@ -69,7 +94,12 @@ export default function Home() {
     if (!editingRecord) return;
 
     // Ensure date is formatted as yyyy-mm-dd
-    const formattedDate = new Date(editingRecord.date).toISOString().split('T')[0];
+    const date = new Date(editingRecord.date);
+    if (isNaN(date.getTime())) {
+      toast.error('Invalid date');
+      return;
+    }
+    const formattedDate = date.toISOString().split('T')[0];
 
     const updatedData = {
       description: editingRecord.description,
@@ -119,18 +149,71 @@ export default function Home() {
     }
   };
 
+  const handleSearch = async () => {
+    try {
+      const response = await fetch(`${process.env.BASE_URL}/search?${searchCriteria}=${searchValue}`);
+      const result = await response.json();
+      setData(result.transactions);
+      setTotalPages(Math.ceil(result.pages));
+    } catch (error) {
+      toast.error('Error searching data');
+      console.error('Error searching data:', error);
+    }
+  };
+
+  const handleSelectRecord = (id: number) => {
+    setSelectedRecords(prev =>
+      prev.includes(id) ? prev.filter(recordId => recordId !== id) : [...prev, id]
+    );
+  };
+
   return (
     <div className="min-h-screen py-8 bg-cream">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-bold mb-8 text-center text-darkText font-playwrite-in">Transaction Records</h1>
+        <div className="flex justify-center mb-8">
+          <div className="relative flex items-center w-full max-w-2xl space-x-2">
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+            />
+            <select
+              value={searchCriteria}
+              onChange={(e) => setSearchCriteria(e.target.value)}
+              className="border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+            >
+              <option value="description">Description</option>
+              <option value="date">Date</option>
+              <option value="amount">Amount</option>
+              <option value="currency">Currency</option>
+            </select>
+            <button
+              onClick={handleSearch}
+              className="p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white transition duration-300"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-tealLight">
-            <div className="flex items-center">
+          <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-tealLight">
+            <div className="flex items-center mb-4 sm:mb-0">
               <EntriesDropdown limit={limit} handleLimitChange={handleLimitChange} />
             </div>
-            <div className="flex items-center space-x-2 ml-auto">
+            <div className="flex items-center space-x-4 ml-auto">
+              {selectedRecords.length > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="p-2 rounded-full bg-red-500 text-white hover:bg-red-700 transition duration-300"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              )}
               <button
-                className="rounded-2xl border-2 border-dashed border-black bg-tealLight hover:bg-teal px-6 py-3 font-semibold uppercase text-black transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none mr-4"
+                className="rounded-2xl border-2 border-dashed border-black bg-tealLight hover:bg-teal px-6 py-3 font-semibold uppercase text-black transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
                 onClick={downloadCSV}
               >
                 Export CSV
@@ -160,6 +243,19 @@ export default function Home() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-tealLight">
                 <tr>
+                  <th className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedRecords(data.map(record => record.id));
+                        } else {
+                          setSelectedRecords([]);
+                        }
+                      }}
+                      checked={selectedRecords.length === data.length}
+                    />
+                  </th>
                   {['Description', 'Date', 'Amount', 'Currency', 'Amount in INR', 'Actions'].map((header) => (
                     <th key={header} className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">{header}</th>
                   ))}
@@ -168,6 +264,13 @@ export default function Home() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {data.map(record => (
                   <tr key={record.id} className="hover:bg-lightPink transition duration-150 ease-in-out group">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedRecords.includes(record.id)}
+                        onChange={() => handleSelectRecord(record.id)}
+                      />
+                    </td>
                     {editingRecord?.id === record.id ? (
                       <>
                         {/* Editable Row */}
@@ -183,6 +286,9 @@ export default function Home() {
                           <input
                             type="date"
                             value={new Date(editingRecord.date).toISOString().split('T')[0]}
+                            onFocus={(e) => e.target.removeAttribute('readonly')}
+                            onBlur={(e) => e.target.setAttribute('readonly', 'true')}
+                            readOnly
                             onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
                             className="border border-gray-300 rounded-md px-2 py-1 w-full"
                           />
