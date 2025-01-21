@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Search, XCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLocation } from 'react-router-dom';
 import { currencies } from '../utils/currencies'; // Import currencies list
@@ -23,19 +23,23 @@ export default function Home() {
   const [selectedRecords, setSelectedRecords] = useState<number[]>([]); // Track selected records
   const [searchCriteria, setSearchCriteria] = useState('description');
   const [searchValue, setSearchValue] = useState('');
+  const [isSearchActive, setIsSearchActive] = useState(false); // Track if search is active
   const location = useLocation();
 
   useEffect(() => {
     fetchData();
-  }, [page, limit, location.pathname]);
+  }, [page, limit, location.pathname, isSearchActive]);
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${process.env.BASE_URL}?page=${page}&limit=${limit}`);
+      const url = isSearchActive
+        ? `${process.env.BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}`
+        : `${process.env.BASE_URL}?page=${page}&limit=${limit}`;
+      const response = await fetch(url);
       const result = await response.json();
-      toast.success('Data fetched successfully');
-      setData(result.transactions);
-      setTotalPages(Math.ceil(result.pages));
+      toast.success(result.message || 'Data fetched successfully');
+      setData(result.transactions || []);
+      setTotalPages(result.pages || 1);
     } catch (error) {
       toast.error('Error fetching data');
       console.error('Error fetching data:', error);
@@ -150,15 +154,21 @@ export default function Home() {
   };
 
   const handleSearch = async () => {
-    try {
-      const response = await fetch(`${process.env.BASE_URL}/search?${searchCriteria}=${searchValue}`);
-      const result = await response.json();
-      setData(result.transactions);
-      setTotalPages(Math.ceil(result.pages));
-    } catch (error) {
-      toast.error('Error searching data');
-      console.error('Error searching data:', error);
+    if (!searchValue.trim()) {
+      toast.error('Please enter a value to search');
+      return;
     }
+
+    setPage(1); // Reset to first page when search is performed
+    setIsSearchActive(true); // Set search active state
+  };
+
+  const handleCancelSearch = () => {
+    setSearchCriteria('description');
+    setSearchValue('');
+    setIsSearchActive(false);
+    setPage(1); // Reset to first page when search is canceled
+    fetchData(); // Fetch original data
   };
 
   const handleSelectRecord = (id: number) => {
@@ -167,22 +177,67 @@ export default function Home() {
     );
   };
 
+  const renderSearchInput = () => {
+    switch (searchCriteria) {
+      case 'date':
+        return (
+          <input
+            type="date"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+          />
+        );
+      case 'currency':
+        return (
+          <select
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+          >
+            {currencies.map(([currencyCode]) => (
+              <option key={currencyCode} value={currencyCode}>
+                {currencyCode}
+              </option>
+            ))}
+          </select>
+        );
+      case 'amount':
+        return (
+          <input
+            type="number"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+          />
+        );
+      case 'description':
+      default:
+        return (
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+          />
+        );
+    }
+  };
+
   return (
     <div className="min-h-screen py-8 bg-cream">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-bold mb-8 text-center text-darkText font-playwrite-in">Transaction Records</h1>
         <div className="flex justify-center mb-8">
           <div className="relative flex items-center w-full max-w-2xl space-x-2">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
-            />
+            {renderSearchInput()}
             <select
               value={searchCriteria}
-              onChange={(e) => setSearchCriteria(e.target.value)}
+              onChange={(e) => {
+                setSearchCriteria(e.target.value);
+                setSearchValue(''); // Clear search value when criteria changes
+              }}
               className="border border-gray-300 rounded-lg py-2 px-4 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
             >
               <option value="description">Description</option>
@@ -196,6 +251,14 @@ export default function Home() {
             >
               <Search className="w-5 h-5" />
             </button>
+            {isSearchActive && (
+              <button
+                onClick={handleCancelSearch}
+                className="p-2 rounded-full bg-red-500 text-white hover:bg-red-700 transition duration-300"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -240,116 +303,122 @@ export default function Home() {
             </div>
           </div>
           <div className="overflow-x-auto p-4">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-tealLight">
-                <tr>
-                  <th className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">
-                    <input
-                      type="checkbox"
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedRecords(data.map(record => record.id));
-                        } else {
-                          setSelectedRecords([]);
-                        }
-                      }}
-                      checked={selectedRecords.length === data.length}
-                    />
-                  </th>
-                  {['Description', 'Date', 'Amount', 'Currency', 'Amount in INR', 'Actions'].map((header) => (
-                    <th key={header} className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">{header}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data.map(record => (
-                  <tr key={record.id} className="hover:bg-lightPink transition duration-150 ease-in-out group">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+            {data.length === 0 ? (
+              <div className="flex justify-center items-center h-64">
+                <p className="text-lg text-gray-500">No data available</p>
+              </div>
+            ) : (
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-tealLight">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">
                       <input
                         type="checkbox"
-                        checked={selectedRecords.includes(record.id)}
-                        onChange={() => handleSelectRecord(record.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRecords(data.map(record => record.id));
+                          } else {
+                            setSelectedRecords([]);
+                          }
+                        }}
+                        checked={selectedRecords.length === data.length}
                       />
-                    </td>
-                    {editingRecord?.id === record.id ? (
-                      <>
-                        {/* Editable Row */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <input
-                            type="text"
-                            value={editingRecord.description}
-                            onChange={(e) => setEditingRecord({ ...editingRecord, description: e.target.value })}
-                            className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <input
-                            type="date"
-                            value={new Date(editingRecord.date).toISOString().split('T')[0]}
-                            onFocus={(e) => e.target.removeAttribute('readonly')}
-                            onBlur={(e) => e.target.setAttribute('readonly', 'true')}
-                            readOnly
-                            onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
-                            className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <input
-                            type="number"
-                            value={editingRecord.originalAmount}
-                            onChange={(e) => setEditingRecord({ ...editingRecord, originalAmount: parseFloat(e.target.value) })}
-                            className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                          />
-                        </td>
-                        {/* Dropdown for Currency */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <select
-                            value={editingRecord.currency}
-                            onChange={(e) => setEditingRecord({ ...editingRecord, currency: e.target.value })}
-                            className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                          >
-                            {currencies.map(([currencyCode]) => (
-                              <option key={currencyCode} value={currencyCode}>
-                                {currencyCode}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        {/* Non-editable Amount in INR */}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">
-                          {editingRecord.amountInINR.toFixed(2)}
-                        </td>
-                        {/* Save and Cancel Buttons */}
-                        <td colSpan={2} className="flex space-x-2 my-2">
-                          <button onClick={handleEditSave} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Save</button>
-                          <button onClick={handleEditCancel} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Cancel</button>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        {/* Non-editable Row */}
-                        <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
-                        {/* Action Buttons */}
-                        <td className="px-6 py-4 whitespace-nowrap flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          {/* Edit Button */}
-                          <button onClick={() => handleEditStart(record)} className="text-blue-500 hover:text-blue-700">
-                            <Edit2 />
-                          </button>
-                          {/* Delete Button */}
-                          <button onClick={() => handleDelete(record.id)} className="text-red-500 hover:text-red-700">
-                            <Trash2 />
-                          </button>
-                        </td>
-                      </>
-                    )}
+                    </th>
+                    {['Description', 'Date', 'Amount', 'Currency', 'Amount in INR', 'Actions'].map((header) => (
+                      <th key={header} className="px-6 py-3 text-left text-s font-semibold text-darkText uppercase tracking-wider">{header}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {data.map(record => (
+                    <tr key={record.id} className="hover:bg-lightPink transition duration-150 ease-in-out group">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedRecords.includes(record.id)}
+                          onChange={() => handleSelectRecord(record.id)}
+                        />
+                      </td>
+                      {editingRecord?.id === record.id ? (
+                        <>
+                          {/* Editable Row */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <input
+                              type="text"
+                              value={editingRecord.description}
+                              onChange={(e) => setEditingRecord({ ...editingRecord, description: e.target.value })}
+                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <input
+                              type="date"
+                              value={new Date(editingRecord.date).toISOString().split('T')[0]}
+                              onFocus={(e) => e.target.removeAttribute('readonly')}
+                              onBlur={(e) => e.target.setAttribute('readonly', 'true')}
+                              readOnly
+                              onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
+                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <input
+                              type="number"
+                              value={editingRecord.originalAmount}
+                              onChange={(e) => setEditingRecord({ ...editingRecord, originalAmount: parseFloat(e.target.value) })}
+                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                            />
+                          </td>
+                          {/* Dropdown for Currency */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <select
+                              value={editingRecord.currency}
+                              onChange={(e) => setEditingRecord({ ...editingRecord, currency: e.target.value })}
+                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                            >
+                              {currencies.map(([currencyCode]) => (
+                                <option key={currencyCode} value={currencyCode}>
+                                  {currencyCode}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          {/* Non-editable Amount in INR */}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">
+                            {editingRecord.amountInINR.toFixed(2)}
+                          </td>
+                          {/* Save and Cancel Buttons */}
+                          <td colSpan={2} className="flex space-x-2 my-2">
+                            <button onClick={handleEditSave} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Save</button>
+                            <button onClick={handleEditCancel} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Cancel</button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          {/* Non-editable Row */}
+                          <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
+                          {/* Action Buttons */}
+                          <td className="px-6 py-4 whitespace-nowrap flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            {/* Edit Button */}
+                            <button onClick={() => handleEditStart(record)} className="text-blue-500 hover:text-blue-700">
+                              <Edit2 />
+                            </button>
+                            {/* Delete Button */}
+                            <button onClick={() => handleDelete(record.id)} className="text-red-500 hover:text-red-700">
+                              <Trash2 />
+                            </button>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
