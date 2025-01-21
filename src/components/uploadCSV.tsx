@@ -30,7 +30,7 @@ export default function UploadCSVForm({ onClose }: UploadCSVFormProps) {
     setIsLoading(true); // Set loading state to true
 
     try {
-      const response = await fetch(`${process.env.BASE_URL}/uploadCSV`, {
+      const response = await fetch(`${process.env.VITE_BASE_URL}/uploadCSV`, {
         method: 'POST',
         body: formData,
       });
