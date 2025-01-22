@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Search, XCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Edit2, Trash2, Search, XCircle, ChartColumnBig, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ReactDOMServer from 'react-dom/server';
 import { useLocation } from 'react-router-dom';
 import { currencies } from '../utils/currencies'; // Import currencies list
 import EntriesDropdown from '../components/entriesDropdown'; // Import the EntriesDropdown component
+import TransactionChart from '../components/transactionChart'; // Import the TransactionChart component
+import PrintableEntries from '../components/printable';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -26,6 +29,8 @@ export default function Home() {
   const [searchCriteria, setSearchCriteria] = useState('description');
   const [searchValue, setSearchValue] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false); // Track if search is active
+  const [isChartOpen, setIsChartOpen] = useState(false);
+  const [chartData, setChartData] = useState<Record[]>([]);
   const location = useLocation();
 
   useEffect(() => {
@@ -45,6 +50,32 @@ export default function Home() {
     } catch (error) {
       toast.error('Error fetching data');
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const handleOpenChart = () => {
+    setChartData(data);
+    setIsChartOpen(true);
+  };
+
+  const handleCloseChart = () => {
+    setIsChartOpen(false);
+  };
+
+  const handlePrintEntries = () => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const printableContent = ReactDOMServer.renderToString(<PrintableEntries data={data} />);
+      printWindow.document.write('<html><head><title>Print Transactions</title></head><body>');
+      printWindow.document.write(printableContent);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+  
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } else {
+      toast.error('Failed to open print window');
     }
   };
 
@@ -267,6 +298,12 @@ export default function Home() {
           <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-tealLight">
             <div className="flex items-center mb-4 sm:mb-0">
               <EntriesDropdown limit={limit} handleLimitChange={handleLimitChange} />
+              <button onClick={handleOpenChart} className="ml-4 p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white transition duration-300">
+                <ChartColumnBig className="w-5 h-5"/>
+              </button>
+              <button onClick={handlePrintEntries} className="ml-4 p-2 rounded-full bg-teal text-darkText hover:bg-tealDark hover:text-white transition duration-300">
+                <Printer className="w-5 h-5"/>
+              </button>
             </div>
             <div className="flex items-center space-x-4 ml-auto">
               {selectedRecords.length > 0 && (
@@ -423,6 +460,7 @@ export default function Home() {
             )}
           </div>
         </div>
+        {isChartOpen && <TransactionChart data={chartData} onClose={handleCloseChart} />}
       </div>
     </div>
   );
