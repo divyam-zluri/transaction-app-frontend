@@ -218,6 +218,8 @@ export default function Home() {
             type="date"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
+            required
+            max = {new Date().toISOString().split('T')[0]}
             className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
           />
         );
@@ -397,6 +399,8 @@ export default function Home() {
                               onBlur={(e) => e.target.setAttribute('readonly', 'true')}
                               readOnly
                               onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
+                              required
+                              max = {new Date().toISOString().split('T')[0]}
                               className="border border-gray-300 rounded-md px-2 py-1 w-full"
                             />
                           </td>
