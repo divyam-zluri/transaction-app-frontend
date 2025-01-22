@@ -3,6 +3,8 @@ import { TiUpload } from "react-icons/ti";
 import toast from 'react-hot-toast';
 import { BarLoader } from './barLoader';
 
+const BASE_URL = import.meta.env.VITE_BASE_URL as string;
+
 interface UploadCSVFormProps {
   onClose: () => void;
 }
@@ -30,7 +32,7 @@ export default function UploadCSVForm({ onClose }: UploadCSVFormProps) {
     setIsLoading(true); // Set loading state to true
 
     try {
-      const response = await fetch(`${process.env.BASE_URL}/uploadCSV`, {
+      const response = await fetch(`${BASE_URL}/uploadCSV`, {
         method: 'POST',
         body: formData,
       });

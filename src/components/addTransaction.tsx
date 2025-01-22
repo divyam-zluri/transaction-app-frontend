@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { currencies } from '../utils/currencies';
 import toast from 'react-hot-toast';
 
+const BASE_URL = import.meta.env.VITE_BASE_URL as string;
+
 interface AddTransactionFormProps {
   onClose: () => void;
 }
@@ -36,7 +38,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
       date: new Date(formData.date).toISOString().split('T')[0], // Format date as yyyy-mm-dd
     };
     try {
-      const response = await fetch(`${process.env.BASE_URL}/add-transaction`, {
+      const response = await fetch(`${BASE_URL}/add-transaction`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -5,6 +5,8 @@ import { useLocation } from 'react-router-dom';
 import { currencies } from '../utils/currencies'; // Import currencies list
 import EntriesDropdown from '../components/entriesDropdown'; // Import the EntriesDropdown component
 
+const BASE_URL = import.meta.env.VITE_BASE_URL as string;
+
 interface Record {
   id: number;
   description: string;
@@ -33,8 +35,8 @@ export default function Home() {
   const fetchData = async () => {
     try {
       const url = isSearchActive
-        ? `${process.env.BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}`
-        : `${process.env.BASE_URL}?page=${page}&limit=${limit}`;
+        ? `${BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}`
+        : `${BASE_URL}?page=${page}&limit=${limit}`;
       const response = await fetch(url);
       const result = await response.json();
       toast.success(result.message || 'Data fetched successfully');
@@ -59,7 +61,7 @@ export default function Home() {
 
   const handleDelete = async (id: number) => {
     try {
-      await fetch(`${process.env.BASE_URL}/soft-delete/${id}`, { method: 'PUT' });
+      await fetch(`${BASE_URL}/soft-delete/${id}`, { method: 'PUT' });
       toast.success('Record deleted successfully');
       fetchData(); // Refresh data after deletion
     } catch (error) {
@@ -70,7 +72,7 @@ export default function Home() {
 
   const handleBulkDelete = async () => {
     try {
-      const response = await fetch(`${process.env.BASE_URL}/delete-selected`, {
+      const response = await fetch(`${BASE_URL}/delete-selected`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: selectedRecords }),
@@ -113,7 +115,7 @@ export default function Home() {
     };
 
     try {
-      const response = await fetch(`${process.env.BASE_URL}/update-transaction/${editingRecord.id}`, {
+      const response = await fetch(`${BASE_URL}/update-transaction/${editingRecord.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedData),
@@ -140,7 +142,7 @@ export default function Home() {
 
   const downloadCSV = async () => {
     try {
-      const response = await fetch(`${process.env.BASE_URL}/download`);
+      const response = await fetch(`${BASE_URL}/download`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');

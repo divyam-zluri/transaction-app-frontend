@@ -7,6 +7,8 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/privateRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string; 
+
 export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -15,7 +17,7 @@ export default function App() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID || ''}>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID || ''}>
       <Router>
         <AuthProvider>
           <div className="bg-cream min-h-screen">
