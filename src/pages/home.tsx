@@ -6,7 +6,7 @@ import { currencies } from '../utils/currencies'; // Import currencies list
 import EntriesDropdown from '../components/entriesDropdown'; // Import the EntriesDropdown component
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
-console.log(BASE_URL);
+
 interface Record {
   id: number;
   description: string;
