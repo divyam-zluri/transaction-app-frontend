@@ -8,7 +8,7 @@ import PrivateRoute from './components/privateRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID; 
-
+console.log(GOOGLE_CLIENT_ID);
 export default function App() {
   const [refreshKey, setRefreshKey] = useState(0);
 
