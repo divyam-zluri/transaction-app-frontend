@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import zluri from '../assets/zluri.webp';
 
 interface User {
@@ -10,7 +10,7 @@ interface User {
 }
 
 interface AuthContextType {
-  isAuthenticated: boolean;
+  isAuthenticated: boolean | undefined;
   user: User | null;
   login: (token: string, isHardcoded?: boolean) => void;
   logout: () => void;
@@ -23,25 +23,35 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | undefined>(undefined);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
   let logoutTimer: NodeJS.Timeout;
 
+  const TOKEN_EXPIRY_DURATION = 5 * 60; // 5 minutes in seconds
+
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      setIsAuthenticated(true);
-      decodeToken(token);
-      startLogoutTimer();
+      const decoded: any = jwtDecode(token);
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        logout(); // Token is expired
+      } else {
+        setIsAuthenticated(true);
+        decodeToken(token);
+        startLogoutTimer(TOKEN_EXPIRY_DURATION);
+      }
+    } else {
+      setIsAuthenticated(false);
     }
   }, []);
 
-  const startLogoutTimer = () => {
+  const startLogoutTimer = (duration: number = TOKEN_EXPIRY_DURATION) => {
     clearTimeout(logoutTimer);
     logoutTimer = setTimeout(() => {
       logout();
-    }, 30 * 60 * 1000); // 30 minutes
+    }, duration * 1000); // Duration in seconds
   };
 
   const decodeToken = (token: string) => {
@@ -72,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('authToken', token);
       decodeToken(token);
     }
-    startLogoutTimer();
+    startLogoutTimer(TOKEN_EXPIRY_DURATION);
     navigate('/'); // Redirect to home page after login
   };
 
@@ -87,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const handleActivity = () => {
       if (isAuthenticated) {
-        startLogoutTimer();
+        startLogoutTimer(TOKEN_EXPIRY_DURATION);
       }
     };
 
