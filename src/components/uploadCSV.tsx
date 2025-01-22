@@ -3,7 +3,7 @@ import { TiUpload } from "react-icons/ti";
 import toast from 'react-hot-toast';
 import { BarLoader } from './barLoader';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL as string;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface UploadCSVFormProps {
   onClose: () => void;

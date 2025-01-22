@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { currencies } from '../utils/currencies';
 import toast from 'react-hot-toast';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL as string;
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface AddTransactionFormProps {
   onClose: () => void;
