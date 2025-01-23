@@ -194,6 +194,7 @@ export default function Home() {
 
     setPage(1); // Reset to first page when search is performed
     setIsSearchActive(true); // Set search active state
+    fetchData();
   };
 
   const handleCancelSearch = () => {
@@ -201,7 +202,6 @@ export default function Home() {
     setSearchValue('');
     setIsSearchActive(false);
     setPage(1); // Reset to first page when search is canceled
-    fetchData(); // Fetch original data
   };
 
   const handleSelectRecord = (id: number) => {
