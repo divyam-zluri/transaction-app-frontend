@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Edit2, Trash2, Search, XCircle, ChartColumnBig, Printer } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, XCircle, ChartColumnBig, Printer, RefreshCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ReactDOMServer from 'react-dom/server';
 import { useLocation } from 'react-router-dom';
@@ -19,12 +19,11 @@ interface Record {
   amountInINR: number;
 }
 
-export default function Home() {
+export default function Restore() {
   const [data, setData] = useState<Record[]>([]);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [editingRecord, setEditingRecord] = useState<Record | null>(null); // Track record being edited
   const [selectedRecords, setSelectedRecords] = useState<number[]>([]); // Track selected records
   const [searchCriteria, setSearchCriteria] = useState('description');
   const [searchValue, setSearchValue] = useState('');
@@ -40,8 +39,8 @@ export default function Home() {
   const fetchData = async () => {
     try {
       const url = isSearchActive
-        ? `${BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}&isDeleted=${false}`
-        : `${BASE_URL}?page=${page}&limit=${limit}&isDeleted=${false}`;
+        ? `${BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}&isDeleted=${true}`
+        : `${BASE_URL}?page=${page}&limit=${limit}&isDeleted=${true}`;
       const response = await fetch(url);
       const result = await response.json();
       toast.success(result.message || 'Data fetched successfully');
@@ -51,6 +50,61 @@ export default function Home() {
       toast.error('Error fetching data');
       console.error('Error fetching data:', error);
     }
+  };
+
+  const handleRestore = async (id: number) => {
+    try {
+      await fetch(`${BASE_URL}/restore/${id}`, { method: 'PUT' });
+      toast.success('Record restored successfully');
+      fetchData(); // Refresh data after restoration
+    } catch (error) {
+      toast.error('Error restoring record');
+      console.error('Error restoring record:', error);
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/delete-selected?isDeleted=${false}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedRecords }),
+      });
+
+      if (response.ok) {
+        toast.success('Selected records restored successfully');
+        setSelectedRecords([]);
+        fetchData(); // Refresh data after restoration
+      } else {
+        const errorDetails = await response.json();
+        toast.error(`Error restoring selected records: ${errorDetails.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      toast.error('Error restoring selected records');
+      console.error('Error restoring selected records:', error);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when limit changes
+  };
+
+  const handleSearch = async () => {
+    if (!searchValue.trim()) {
+      toast.error('Please enter a value to search');
+      return;
+    }
+
+    setPage(1); // Reset to first page when search is performed
+    setIsSearchActive(true); // Set search active state
+    fetchData();
   };
 
   const handleOpenChart = () => {
@@ -78,125 +132,6 @@ export default function Home() {
       toast.error('Failed to open print window');
     }
   };
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= totalPages) {
-      setPage(newPage);
-    }
-  };
-
-  const handleLimitChange = (newLimit: number) => {
-    setLimit(newLimit);
-    setPage(1); // Reset to first page when limit changes
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      await fetch(`${BASE_URL}/soft-delete/${id}`, { method: 'PUT' });
-      toast.success('Record deleted successfully');
-      fetchData(); // Refresh data after deletion
-    } catch (error) {
-      toast.error('Error deleting record');
-      console.error('Error deleting record:', error);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/delete-selected?isDeleted=${true}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: selectedRecords }),
-      });
-
-      if (response.ok) {
-        toast.success('Selected records deleted successfully');
-        setSelectedRecords([]);
-        fetchData(); // Refresh data after deletion
-      } else {
-        const errorDetails = await response.json();
-        toast.error(`Error deleting selected records: ${errorDetails.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      toast.error('Error deleting selected records');
-      console.error('Error deleting selected records:', error);
-    }
-  };
-
-  const handleEditStart = (record: Record) => {
-    setEditingRecord(record); // Set the record to be edited
-  };
-
-  const handleEditSave = async () => {
-    if (!editingRecord) return;
-
-    // Ensure date is formatted as yyyy-mm-dd
-    const date = new Date(editingRecord.date);
-    if (isNaN(date.getTime())) {
-      toast.error('Invalid date');
-      return;
-    }
-    const formattedDate = date.toISOString().split('T')[0];
-
-    const updatedData = {
-      description: editingRecord.description,
-      date: formattedDate,
-      originalAmount: editingRecord.originalAmount,
-      currency: editingRecord.currency,
-    };
-
-    try {
-      const response = await fetch(`${BASE_URL}/update-transaction/${editingRecord.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData),
-      });
-
-      if (response.ok) {
-        toast.success('Record updated successfully');
-        fetchData(); // Refresh data after update
-        setEditingRecord(null); // Exit edit mode
-      } else {
-        const errorDetails = await response.json();
-        console.error('Error updating record:', errorDetails);
-        toast.error(`Error updating record: ${errorDetails.message || 'Unknown error'}`);
-      }
-    } catch (error) {
-      toast.error('Error updating record');
-      console.error('Error updating record:', error);
-    }
-  };
-
-  const handleEditCancel = () => {
-    setEditingRecord(null); // Exit edit mode without saving
-  };
-
-  const downloadCSV = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/download`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'transactions.csv';
-      a.click();
-    } catch (error) {
-      toast.error('Error downloading CSV');
-      console.error('Error downloading CSV:', error);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchValue.trim()) {
-      toast.error('Please enter a value to search');
-      return;
-    }
-
-    setPage(1); // Reset to first page when search is performed
-    setIsSearchActive(true); // Set search active state
-    fetchData();
-  };
-
   const handleCancelSearch = () => {
     setSearchCriteria('description');
     setSearchValue('');
@@ -219,7 +154,7 @@ export default function Home() {
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             required
-            max = {new Date().toISOString().split('T')[0]}
+            max={new Date().toISOString().split('T')[0]}
             className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
           />
         );
@@ -259,11 +194,10 @@ export default function Home() {
         );
     }
   };
-
   return (
     <div className="min-h-screen py-8 bg-cream">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold mb-8 text-center text-darkText font-playwrite-in">Transaction Records</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center text-darkText font-playwrite-in">Restore Records</h1>
         <div className="flex justify-center mb-8">
           <div className="relative flex items-center w-full max-w-2xl space-x-2">
             {renderSearchInput()}
@@ -310,18 +244,12 @@ export default function Home() {
             <div className="flex items-center space-x-4 ml-auto">
               {selectedRecords.length > 0 && (
                 <button
-                  onClick={handleBulkDelete}
-                  className="p-2 rounded-full bg-red-500 text-white hover:bg-red-700 transition duration-300"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-              <button
-                className="rounded-2xl border-2 border-dashed border-black bg-tealLight hover:bg-teal px-6 py-3 font-semibold uppercase text-black transition-all duration-300 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
-                onClick={downloadCSV}
+                onClick={handleBulkRestore}
+                className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-700 transition duration-300"
               >
-                Export CSV
+                <RefreshCcw className="w-5 h-5" />
               </button>
+              )}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handlePageChange(page - 1)}
@@ -380,83 +308,17 @@ export default function Home() {
                           onChange={() => handleSelectRecord(record.id)}
                         />
                       </td>
-                      {editingRecord?.id === record.id ? (
-                        <>
-                          {/* Editable Row */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <input
-                              type="text"
-                              value={editingRecord.description}
-                              onChange={(e) => setEditingRecord({ ...editingRecord, description: e.target.value })}
-                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <input
-                              type="date"
-                              value={new Date(editingRecord.date).toISOString().split('T')[0]}
-                              onFocus={(e) => e.target.removeAttribute('readonly')}
-                              onBlur={(e) => e.target.setAttribute('readonly', 'true')}
-                              readOnly
-                              onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
-                              required
-                              max = {new Date().toISOString().split('T')[0]}
-                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                            />
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <input
-                              type="number"
-                              value={editingRecord.originalAmount}
-                              onChange={(e) => setEditingRecord({ ...editingRecord, originalAmount: parseFloat(e.target.value) })}
-                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                            />
-                          </td>
-                          {/* Dropdown for Currency */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <select
-                              value={editingRecord.currency}
-                              onChange={(e) => setEditingRecord({ ...editingRecord, currency: e.target.value })}
-                              className="border border-gray-300 rounded-md px-2 py-1 w-full"
-                            >
-                              {currencies.map(([currencyCode]) => (
-                                <option key={currencyCode} value={currencyCode}>
-                                  {currencyCode}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          {/* Non-editable Amount in INR */}
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">
-                            {editingRecord.amountInINR.toFixed(2)}
-                          </td>
-                          {/* Save and Cancel Buttons */}
-                          <td colSpan={2} className="flex space-x-2 my-2">
-                            <button onClick={handleEditSave} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Save</button>
-                            <button onClick={handleEditCancel} className="bg-teal px-4 py-2 rounded-md text-black hover:text-white hover:bg-tealDark">Cancel</button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          {/* Non-editable Row */}
-                          <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
-                          {/* Action Buttons */}
-                          <td className="px-6 py-4 whitespace-nowrap flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            {/* Edit Button */}
-                            <button onClick={() => handleEditStart(record)} className="text-blue-500 hover:text-blue-700">
-                              <Edit2 />
-                            </button>
-                            {/* Delete Button */}
-                            <button onClick={() => handleDelete(record.id)} className="text-red-500 hover:text-red-700">
-                              <Trash2 />
-                            </button>
-                          </td>
-                        </>
-                      )}
+                      <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        {/* Restore Button */}
+                        <button onClick={() => handleRestore(record.id)} className="text-green-500 hover:text-green-700">
+                            <RefreshCcw className=" text-blue-500 hover:text-blue-700"/>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

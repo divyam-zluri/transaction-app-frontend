@@ -6,6 +6,7 @@ import Login from './pages/login';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/privateRoute';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Restore from './pages/restore';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID; 
 
@@ -31,6 +32,19 @@ export default function App() {
                       <Header onRefresh={handleRefresh} />
                       <main className="container mx-auto p-6">
                         <Home key={refreshKey} />
+                      </main>
+                    </>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/restore"
+                element={
+                  <PrivateRoute>
+                    <>
+                      <Header onRefresh={handleRefresh} />
+                      <main className="container mx-auto p-6">
+                        <Restore key={refreshKey} />
                       </main>
                     </>
                   </PrivateRoute>

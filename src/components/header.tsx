@@ -39,6 +39,7 @@ export default function Header({ onRefresh }: HeaderProps) {
   };
 
   const home = () => navigate('/');
+  const restore = () => navigate('/restore');
   const toggleMenu = () => setMenuOpen(!isMenuOpen);
 
   return (
@@ -68,6 +69,12 @@ export default function Header({ onRefresh }: HeaderProps) {
           </button>
           <button
             className="rounded-2xl text-cream transition-transform hover:text-black hover:border-2 hover:border-dashed hover:border-black bg-tealDark hover:bg-teal px-6 py-3 font-semibold uppercase duration-500 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
+            onClick={restore}
+          >
+            Restore
+          </button>
+          <button
+            className="rounded-2xl text-cream transition-transform hover:text-black hover:border-2 hover:border-dashed hover:border-black bg-tealDark hover:bg-teal px-6 py-3 font-semibold uppercase duration-500 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
             onClick={openUpload}
           >
             Upload CSV
@@ -93,7 +100,7 @@ export default function Header({ onRefresh }: HeaderProps) {
             <>
               <FaUserCircle className="text-3xl text-cream" />
               <span className="text-sm text-cream">
-                Welcome, <strong>Zluri</strong>
+                Welcome, <strong>Guest</strong>
               </span>
             </>
           )}
@@ -112,6 +119,12 @@ export default function Header({ onRefresh }: HeaderProps) {
               onClick={home}
             >
               Home
+            </button>
+            <button
+              className="rounded-2xl text-cream transition-transform hover:text-black hover:border-2 hover:border-dashed hover:border-black bg-tealDark hover:bg-teal px-6 py-3 font-semibold uppercase duration-500 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
+              onClick={restore}
+            >
+              Restore
             </button>
             <button
               className="rounded-2xl text-cream transition-transform hover:text-black hover:border-2 hover:border-dashed hover:border-black bg-tealDark hover:bg-teal px-6 py-3 font-semibold uppercase duration-500 hover:translate-x-[-4px] hover:translate-y-[-4px] hover:rounded-md hover:shadow-[4px_4px_0px_black] active:translate-x-[0px] active:translate-y-[0px] active:rounded-2xl active:shadow-none"
