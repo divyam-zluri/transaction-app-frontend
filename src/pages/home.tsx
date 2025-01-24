@@ -81,6 +81,7 @@ export default function Home() {
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
+      setSelectedRecords([]); // Clear selected records when page changes
       setPage(newPage);
     }
   };
