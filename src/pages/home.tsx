@@ -222,6 +222,7 @@ export default function Home() {
             required
             max = {new Date().toISOString().split('T')[0]}
             className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
+            onKeyDown={(e) => e.preventDefault()} // Disable typing in date field
           />
         );
       case 'currency':
@@ -403,6 +404,7 @@ export default function Home() {
                               required
                               max = {new Date().toISOString().split('T')[0]}
                               className="border border-gray-300 rounded-md px-2 py-1 w-full"
+                              onKeyDown={(e) => e.preventDefault()} // Disable typing in date field
                             />
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
