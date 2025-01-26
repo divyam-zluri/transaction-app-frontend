@@ -7,6 +7,7 @@ import { currencies } from '../utils/currencies'; // Import currencies list
 import EntriesDropdown from '../components/entriesDropdown'; // Import the EntriesDropdown component
 import TransactionChart from '../components/transactionChart'; // Import the TransactionChart component
 import PrintableEntries from '../components/printable';
+import { BarLoader } from '../components/barLoader'; // Import BarLoader component
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -30,6 +31,7 @@ export default function Restore() {
   const [isSearchActive, setIsSearchActive] = useState(false); // Track if search is active
   const [isChartOpen, setIsChartOpen] = useState(false);
   const [chartData, setChartData] = useState<Record[]>([]);
+  const [loading, setLoading] = useState(false); // Track loading state
   const location = useLocation();
 
   useEffect(() => {
@@ -37,6 +39,7 @@ export default function Restore() {
   }, [page, limit, location.pathname, isSearchActive]);
 
   const fetchData = async () => {
+    setLoading(true); // Start loading
     try {
       const url = isSearchActive
         ? `${BASE_URL}/search?${searchCriteria}=${searchValue}&page=${page}&limit=${limit}&isDeleted=${true}`
@@ -49,6 +52,8 @@ export default function Restore() {
     } catch (error) {
       toast.error('Error fetching data');
       console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -274,7 +279,11 @@ export default function Restore() {
             </div>
           </div>
           <div className="overflow-x-auto p-4">
-            {data.length === 0 ? (
+            {loading ? (
+              <div className="flex justify-center items-center h-64">
+                <BarLoader/>
+              </div>
+            ) : data.length === 0 ? (
               <div className="flex justify-center items-center h-64">
                 <p className="text-lg text-gray-500">No data available</p>
               </div>
