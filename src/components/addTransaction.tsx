@@ -18,9 +18,9 @@ interface FormData {
 export default function AddTransactionForm({ onClose }: AddTransactionFormProps) {
   const [formData, setFormData] = useState<FormData>({
     description: '',
-    originalAmount: 0,
+    originalAmount: 1,
     date: '',
-    currency: currencies[0][0] as string, // Default to first currency (INR)
+    currency: '', // Set default currency to empty
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -51,9 +51,9 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
         toast.success('Transaction added successfully!');
         setFormData({
           description: '',
-          originalAmount: 0,
+          originalAmount: 1,
           date: '',
-          currency: currencies[0][0] as string,
+          currency: '', // Reset currency to empty
         });
         onClose(); // Close the modal on success
       } else {
@@ -86,6 +86,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
           name="originalAmount"
           value={formData.originalAmount}
           onChange={handleChange}
+          min={1}
           required
           className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         />
@@ -99,6 +100,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
           required
           className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         >
+          <option value="" disabled>Select currency</option> {/* Add a placeholder option */}
           {currencies.map(([code]) => (
             <option key={code} value={code}>{code}</option>
           ))}
