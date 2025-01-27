@@ -112,6 +112,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
           value={formData.date}
           onChange={handleChange}
           required
+          min = {new Date('1990-01-01').toISOString().split('T')[0]}
           max={new Date().toISOString().split('T')[0]} // Set max date to today
           className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
           onKeyDown={(e) => e.preventDefault()} // Disable typing in date field
