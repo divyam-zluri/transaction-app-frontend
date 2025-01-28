@@ -84,9 +84,9 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
         <input
           type="number"
           name="originalAmount"
+          min={0.0001}
           value={formData.originalAmount}
           onChange={handleChange}
-          min={1}
           required
           className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
         />

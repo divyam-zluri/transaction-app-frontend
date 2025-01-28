@@ -420,7 +420,6 @@ export default function Home() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <input
                               type="number"
-                              min={1}
                               value={editingRecord.originalAmount}
                               onChange={(e) => setEditingRecord({ ...editingRecord, originalAmount: parseFloat(e.target.value) })}
                               className="border border-gray-300 rounded-md px-2 py-1 w-full"

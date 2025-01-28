@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import Overlay from './overlay';
@@ -18,6 +18,17 @@ export default function Header({ onRefresh }: HeaderProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const logoutAction = () => {
     toast.success('Logged out successfully');
