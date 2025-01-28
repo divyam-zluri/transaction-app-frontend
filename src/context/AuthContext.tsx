@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   let logoutTimer: NodeJS.Timeout;
 
-  const TOKEN_EXPIRY_DURATION = 5 * 60; // 5 minutes in seconds
+  const TOKEN_EXPIRY_DURATION = 30 * 60; // 5 minutes in seconds
 
   useEffect(() => {
     const token = localStorage.getItem('authToken');
