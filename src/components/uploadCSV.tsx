@@ -86,7 +86,6 @@ export default function UploadCSVForm({ onClose }: UploadCSVFormProps) {
           />
           <label htmlFor="file-upload" className="cursor-pointer flex flex-col justify-center items-center">
             <TiUpload className="text-4xl my-3 text-teal hover:text-tealDark transition duration-300" />
-            <h1>click on the icon to upload</h1>
           </label>
           {file && <span className="ml-4 text-darkText">{file.name}</span>}
         </div>
