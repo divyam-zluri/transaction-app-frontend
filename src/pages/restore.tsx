@@ -321,7 +321,9 @@ export default function Restore() {
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {new Date(record.date).toLocaleDateString('en-GB')}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>

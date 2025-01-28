@@ -411,8 +411,8 @@ export default function Home() {
                               readOnly
                               onChange={(e) => setEditingRecord({ ...editingRecord, date: e.target.value })}
                               required
-                              min = {new Date('1990-01-01').toISOString().split('T')[0]}
-                              max = {new Date().toISOString().split('T')[0]}
+                              min={new Date('1990-01-01').toISOString().split('T')[0]}
+                              max={new Date().toISOString().split('T')[0]}
                               className="border border-gray-300 rounded-md px-2 py-1 w-full"
                               onKeyDown={(e) => e.preventDefault()} // Disable typing in date field
                             />
@@ -453,7 +453,9 @@ export default function Home() {
                         <>
                           {/* Non-editable Row */}
                           <td className="px-6 py-4 whitespace-normal text-sm text-darkText">{record.description}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{new Date(record.date).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {new Date(record.date).toLocaleDateString('en-GB')}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.originalAmount.toFixed(2)}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{record.currency}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-darkText">{record.amountInINR.toFixed(2)}</td>
