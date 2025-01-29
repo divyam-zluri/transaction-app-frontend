@@ -144,7 +144,7 @@ export default function Home() {
     const formattedDate = date.toISOString().split('T')[0];
 
     const updatedData = {
-      description: editingRecord.description,
+      description: editingRecord.description.trim().normalize('NFKD').replace(/[^\w\s-]/g, '').replace(/\s+/g, ' ').trim(),
       date: formattedDate,
       originalAmount: editingRecord.originalAmount,
       currency: editingRecord.currency,
@@ -237,6 +237,7 @@ export default function Home() {
             onChange={(e) => setSearchValue(e.target.value)}
             className="border border-gray-300 rounded-lg py-2 px-4 w-full focus:ring-2 focus:ring-teal focus:border-teal transition-all duration-200"
           >
+            <option value="" disabled>Select Currency</option> {/* Placeholder option */}
             {currencies.map(([currencyCode]) => (
               <option key={currencyCode} value={currencyCode}>
                 {currencyCode}

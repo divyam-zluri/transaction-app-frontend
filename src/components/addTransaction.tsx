@@ -35,6 +35,7 @@ export default function AddTransactionForm({ onClose }: AddTransactionFormProps)
     e.preventDefault();
     const formattedData = {
       ...formData,
+      description: formData.description.trim().normalize('NFKD').replace(/[^\w\s-]/g, '').replace(/\s+/g, ' ').trim(),
       date: new Date(formData.date).toISOString().split('T')[0], // Format date as yyyy-mm-dd
     };
     try {
