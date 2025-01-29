@@ -99,6 +99,7 @@ export default function Home() {
     try {
       await fetch(`${BASE_URL}/soft-delete/${id}`, { method: 'PUT' });
       toast.success('Record deleted successfully');
+      setSelectedRecords([]); // Clear selected records after deletion
       fetchData(); // Refresh data after deletion
     } catch (error) {
       toast.error('Error deleting record');
